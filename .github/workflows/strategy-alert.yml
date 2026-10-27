@@ -1,0 +1,31 @@
+name: Strategy alert
+
+on:
+  schedule:
+    - cron: "2 * * * *"   # ogni ora, 2 minuti dopo la chiusura della candela H1
+  workflow_dispatch:       # avvio manuale (manda anche il messaggio di test)
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install yfinance pandas requests
+
+      - run: python strategy_alert.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SEND_START: ${{ github.event_name == 'workflow_dispatch' }}
+          # Parametri della strategia (ipotesi da verificare col backtest):
+          PAIRS: "EURUSD=X"
+          RSI_LOW: "40"
+          RSI_HIGH: "60"
+          ATR_MULT: "1.5"
+          RR: "1.5"
